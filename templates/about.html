@@ -3,30 +3,33 @@
 {{template "_head.html" .}}
 
 <body>
-  {{template "_navbar.html" .}}
-  <main class="mdl-layout__content">
-   <div class = "wide-card mdl-card mdl-shadow--2dp">
-      <div class = "mdl-card__title">
-         <img src="/static/img/picsou.jpg"></img>
+   {{template "_navbar.html" .}}
+   <main>
+      <div class="ui main text container">
+         <div class="ui card">
+            <div class="image">
+               <img src="/static/img/picsou.jpg">
+            </div>
+            <div class="content">
+               <a class="header">{{.About.Application}}</a>
+               <div class="meta">
+                  <span>Version {{.About.Version}}</span>
+                  <span class="date">{{.About.Date}}</span>
+                  <span class="user icon">{{.About.Author}}</span>
+               </div>
+               <div class="description">
+                  {{.About.Note}}
+               </div>
+            </div>
+            <div class="extra content">
+               <a href="https://github.com/pbillerot/graduel">
+                  <i class="github icon"></i>Github
+               </a>
+            </div>
+         </div>
       </div>
-   
-      <div class = "mdl-card__supporting-text">
-         <h2>{{.About.Application}}</h2>
-         <p>{{.About.Note}}</p>
-      </div>
-   
-      <div class = "mdl-card__actions mdl-card--border">
-         <ul>
-            <li>Version {{.About.Version}}</li>
-            <li>du {{.About.Date}}</li>
-            <li>&copy; {{.About.Author}}</li>
-            <li><a href="https://github.com/pbillerot/graduel">Github</a></li>
-         </ul>
-      </div>
-   
-   </div>
-  </main>
-  {{template "_footer.html" .}}
+   </main>
+   {{template "_footer.html" .}}
 </body>
 
 </html>

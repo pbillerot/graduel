@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+{{template "_head.html" .}}
+
+<body>
+  {{template "_navbar.html" .}}
+  <main class="mdl-layout__content">
+    <div class="page-content">Hello World!</div>
+    <table class = "mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
+      <thead>
+         <tr><th class = "mdl-data-table__cell--non-numeric">Student</th>
+            <th>Class</th><th>Grade</th></tr>
+      </thead>
+      
+      <tbody>
+         <tr><td class = "mdl-data-table__cell--non-numeric">Mahesh Parashar</td>
+            <td>VI</td><td>A</td></tr>
+         <tr><td class = "mdl-data-table__cell--non-numeric">Rahul Sharma</td>
+            <td>VI</td><td>B</td></tr>
+         <tr><td class = "mdl-data-table__cell--non-numeric">Mohan Sood</td>
+            <td>VI</td><td>A</td></tr>
+      </tbody>
+   </table>
+  </main>
+  {{template "_footer.html" .}}
+</body>
+
+</html>

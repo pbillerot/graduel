@@ -1,110 +1,53 @@
 <!DOCTYPE html>
 <html>
 {{template "_head.html" .}}
-<!-- Wide card with share menu button -->
-<style>
+<style type="text/css">
   body {
-    padding-top: 60px;
-    padding-left: 20px;
-    box-sizing: border-box;
+    background-color: #DADADA;
   }
-
-  .mdl-dialog {
-    border: none;
-    box-shadow: 0 9px 46px 8px rgba(0, 0, 0, 0.14), 0 11px 15px -7px rgba(0, 0, 0, 0.12), 0 24px 38px 3px rgba(0, 0, 0, 0.2);
-    width: 320px;
-    margin: auto;
+  body > .grid {
+    height: 100%;
   }
-
-  .mdl-dialog__title {
-    padding: 24px 24px 0;
-    margin: 0;
-    font-size: 2.5rem;
+  .image {
+    margin-top: -100px;
   }
-
-  .mdl-dialog__actions {
-    padding: 8px 8px 8px 24px;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-flex-direction: row-reverse;
-    -ms-flex-direction: row-reverse;
-    flex-direction: row-reverse;
-    -webkit-flex-wrap: wrap;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
-  }
-
-  .mdl-dialog__actions>* {
-    margin-right: 8px;
-    height: 36px;
-  }
-
-  .mdl-dialog__actions>*:first-child {
-    margin-right: 0;
-  }
-
-  .mdl-dialog__actions--full-width {
-    padding: 0 0 8px 0;
-  }
-
-  .mdl-dialog__actions--full-width>* {
-    height: 48px;
-    -webkit-flex: 0 0 100%;
-    -ms-flex: 0 0 100%;
-    flex: 0 0 100%;
-    padding-right: 16px;
-    margin-right: 0;
-    text-align: right;
-  }
-
-  .mdl-dialog__content {
-    padding: 20px 24px 24px 24px;
-    color: rgba(0, 0, 0, 0.54);
-  }
-
-  .demo-card-wide.mdl-card {
-    width: 320px;    
-  }
-
-  .demo-card-wide>.mdl-card__title {
-    color: #fff;
-    height: 320px;
-    background: url('/static/img/picsou.jpg') center / cover;
-  }
-
-  .demo-card-wide>.mdl-card__menu {
-    color: #fff;
+  .column {
+    max-width: 450px;
   }
 </style>
-
 <body>
-  <main class="mdl-dialog">
-    <div class="demo-card-wide mdl-card mdl-shadow--2dp">
-      <div class="mdl-card__title">
-        <!-- <h2 class="mdl-card__title-text">graduel</h2> -->
-      </div>
-      <form action="/login" method="POST">
-        <div class="mdl-card__supporting-text">
-          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-            <input name="username" class="mdl-textfield__input" type="text" id="username">
-            <label class="mdl-textfield__label" for="username">Nom</label>
-          </div>
-          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-            <input name="password" class="mdl-textfield__input" type="password" id="password">
-            <label class="mdl-textfield__label" for="password">Mot de passe</label>
-          </div>
-          {{ .CSRFToken }}
-
+  <div class="ui middle aligned center aligned grid">
+    <div class="column">
+      <h2 class="ui teal image header">
+        <img src="/static/img/picsou.jpg" class="image">
+        <div class="content">
+          Identification
         </div>
-        <div class="mdl-card__actions mdl-card--border">
-          <input type="submit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect"
-            value="SE CONNECTER" class="btn btn-primary" />
+      </h2>
+      <form class="ui large form" action="/login" method="POST">
+        <div class="ui stacked segment">
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="text" name="username" placeholder="Username">
+            </div>
+          </div>
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="password" placeholder="Password">
+            </div>
+          </div>
+          <button class="ui fluid large teal submit button" type="submit">Se connecter</button>
         </div>
+        {{ .CSRFToken }}  
+        <div class="ui error message"></div>
+  
       </form>
+  
     </div>
-  </main>
-  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  </div>
+  <script defer src="/static/ui/semantic-min.js"></script>
 </body>
 
 </html>
