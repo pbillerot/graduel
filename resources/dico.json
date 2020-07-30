@@ -1,0 +1,30 @@
+{
+    "title": "PICSOU en action",
+    "constants": {
+        "qlast_quotes": "30"
+    },
+    "tables": [
+        {
+            "id": "orders",
+            "key": "orders_id",
+            "elements": [
+                {
+                    "id": "orders_id",
+                    "label_long": "id",
+                    "label_short": "id",
+                    "type": "counter",
+                    "hide": false
+                },
+                {
+                    "id": "orders_ptf_id",
+                    "label_long": "Valeur",
+                    "label_short": "Valeur",
+                    "type": "combo",
+                    "sql_items": "SELECT distinct quotes.id, quotes.name FROM quotes",
+                    "searchable": true,
+                    "sortable": true
+                }
+            ]
+        }
+    ]
+}

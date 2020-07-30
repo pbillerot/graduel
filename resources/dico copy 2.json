@@ -1,0 +1,99 @@
+{
+    "title": "PICSOU en action",
+    "info": "Analyse les cours de la bourse et propose des ordres d'achat et de vente de valeurs",
+    "menu_orientation": "horizontal",
+    "icon_file": "picsou.jpg",
+    "basename": "/mnt/nas/data/picsou/picsou.sqlite",
+    "data_directory": "/mnt/nas/data/picsou",
+    "constants": {
+        "qlast_quotes": "30"
+    },
+    "tables": {
+        "orders": {
+            "key": "orders_id",
+            "key_display": "orders_id",
+            "elements": {
+                "orders_id": {
+                    "label_long": "id",
+                    "label_short": "id",
+                    "type": "counter",
+                    "hide": false
+                },
+                "orders_ptf_id": {
+                    "label_long": "Valeur",
+                    "label_short": "Valeur",
+                    "type": "combo",
+                    "sql_items": "SELECT distinct quotes.id, quotes.name FROM quotes",
+                    "searchable": true,
+                    "sortable": true
+                }
+            },
+            "views": {
+                "vbuy": {
+                    "title": "Achat",
+                    "form_add": "faddbuy",
+                    "form_edit": "feditbuy",
+                    "searchable": true,
+                    "deletable": true,
+                    "limit": 100,
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {}
+                    }
+                }
+            },
+            "forms": {
+                "faddbuy": {
+                    "title": "Ajout d'un ordre d'Achat",
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {}
+                    }
+                },
+                "fbuy": {
+                    "title": "Ajout d'un ordre d'Achat",
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {}
+                    }
+                }
+            }
+        },
+        "ptf": {
+            "key": "ptf_id",
+            "elements": {
+                "ptf_id": {
+                    "label_long": "Valeur",
+                    "label_short": "Valeur",
+                    "type": "text",
+                    "sortable": true,
+                    "searchable": true
+                },
+                "ptf_name": {
+                    "label_long": "Nom",
+                    "label_short": "Nom",
+                    "type": "text",
+                    "searchable": true,
+                    "sortable": true,
+                    "col_width": 140
+                }
+            },
+            "views": {
+                "vactif": {
+                    "title": "Valeurs Actives",
+                    "form_add": "fadd",
+                    "form_edit": "fedit",
+                    "icon_name": "user-bookmarks",
+                    "searchable": true,
+                    "elements": {
+                        "ptf_id": {},
+                        "ptf_name": {}
+                    },
+                    "order_by": "ptf_top desc, ptf_id"
+                }
+            },
+            "forms": {
+            }
+        }
+    }
+}

@@ -1,0 +1,1273 @@
+{
+    "title": "PICSOU en action",
+    "info": "Analyse les cours de la bourse et propose des ordres d'achat et de vente de valeurs",
+    "menu_orientation": "horizontal",
+    "icon_file": "picsou.jpg",
+    "basename": "/mnt/nas/data/picsou/picsou.sqlite",
+    "basehost": "~/data/picsou/picsou.sqlite",
+    "data_directory": "/mnt/nas/data/picsou",
+    "constants": {
+        "qlast_quotes": 30,
+        "stake": 1200,
+        "cost": 0.0047,
+        "macdbuy": 40,
+        "rsimin": 20,
+        "rsimax": 70,
+        "hours_limit": 17,
+        "minutes_limit": 15,
+        "declench_percent": -4,
+        "seuil_vente": 0.025,
+        "seuil_achat": 0.03
+    },
+    "scheduler": {
+        "batch": "./picsou_batch.py -day",
+        "periode_mn": 10
+    },
+    "shell": {
+        "Picsou Backup": "./picsou_batch.py -backup",
+        "Picsou Restauration": "./picsou_batch.py -restore",
+        "Picsou Trade": "./picsou.py -day -trade",
+        "Picsou Quote": "./picsou.py -day -quote",
+        "Picsou Repeat": "./picsou.py -dayrepeat -quote -trade"
+    },
+    "tables": {
+        "orders": {
+            "key": "orders_id",
+            "key_display": "orders_id",
+            "elements": {
+                "orders_id": {
+                    "label_long": "id",
+                    "label_short": "id",
+                    "type": "counter",
+                    "hide": false
+                },
+                "orders_ptf_id": {
+                    "label_long": "Valeur",
+                    "label_short": "Valeur",
+                    "type": "combo",
+                    "sql_items": "SELECT distinct quotes.id, quotes.name FROM quotes",
+                    "searchable": true,
+                    "sortable": true
+                },
+                "_ptf_name": {
+                    "label_long": "Nom de la valeur",
+                    "label_short": "Nom",
+                    "type": "text",
+                    "searchable": true,
+                    "sortable": true,
+                    "sql_text": "SELECT ptf_name From ptf where ptf_id = '{orders_ptf_id}'",
+                    "jointure": {
+                        "join": "LEFT OUTER JOIN ptf on ptf.ptf_id = orders.orders_ptf_id",
+                        "column": "ptf_name"
+                    },
+                    "formulass": "ptf_name from ptf where ptf_id = '{orders_ptf_id}'"
+                },
+                "_ptf_isin": {
+                    "label_long": "Code ISIN",
+                    "label_short": "ISIN",
+                    "type": "text",
+                    "searchable": true,
+                    "sortable": true,
+                    "sql_text": "SELECT ptf_isin From ptf where ptf_id = '{orders_ptf_id}'",
+                    "jointure": {
+                        "join": "",
+                        "column": "ptf_isin"
+                    }
+                },
+                "orders_order": {
+                    "label_long": "Ordre",
+                    "label_short": "Ordre",
+                    "type": "combo",
+                    "col_align": "center",
+                    "items": {"buy":"Achat","sell":"Vente"}
+                },
+                "orders_rem": {
+                    "label_long": "Remarque",
+                    "label_short": "Rem.",
+                    "type": "text",
+                    "col_editable": true
+                },
+                "orders_time": {
+                    "label_long": "Jour Heure d'achat",
+                    "label_short": "JH d'achat",
+                    "type": "text",
+                    "sortable": true,
+                    "searchable": true,
+                    "default_sql": "select datetime('now', 'localtime')"
+                },
+                "orders_sell_time": {
+                    "label_long": "Jour Heure de vente",
+                    "label_short": "JH de vente",
+                    "type": "text",
+                    "sortable": true,
+                    "searchable": true,
+                    "default_sql": "select datetime('now', 'localtime')"
+                },
+                "orders_quote": {
+                    "label_long": "Cours du jour",
+                    "label_short": "Cours J",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "formulas": "close from quotes where id = '{orders_ptf_id}' and date = (select max(date) from quotes where id = '{orders_ptf_id}')"
+                },
+                "orders_quantity": {
+                    "label_long": "Quantité",
+                    "label_short": "Qt",
+                    "col_align": "center",
+                    "type": "int",
+                    "refresh": true
+                },
+                "orders_buy": {
+                    "label_long": "Cours d'achat",
+                    "label_short": "Achat à",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "refresh": true
+                },
+                "orders_sell": {
+                    "label_long": "Cours de vente",
+                    "label_short": "Vente à",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "default": "{orders_quote}",
+                    "refresh": true
+                },
+                "orders_cost_price": {
+                    "label_long": "Prix de revient",
+                    "label_short": "Revient",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "col_width": 80,
+                    "formulas": "({orders_buy} * {orders_quantity} + {orders_buy} * {orders_quantity} * ({__cost}*2))/{orders_quantity}"
+                },
+                "orders_cost": {
+                    "label_long": "Frais",
+                    "label_short": "Frais",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "col_width": 60,
+                    "formulas": "{orders_buy} * {orders_quantity} * {__cost}"
+                },
+                "orders_debit": {
+                    "label_long": "Débit",
+                    "label_short": "Débit",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "col_width": 80,
+                    "formulas": "{orders_buy} * {orders_quantity} + {orders_buy} * {orders_quantity} * {__cost}"
+                },
+                "orders_credit": {
+                    "label_long": "Crédit",
+                    "label_short": "Crédit",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "col_width": 80,
+                    "formulas": "{orders_sell} * {orders_quantity} + {orders_sell} * {orders_quantity} * {__cost}"
+                },
+                "orders_gain": {
+                    "label_long": "Gain",
+                    "label_short": "Gain",
+                    "type": "float",
+                    "col_width": 80,
+                    "display": "%3.2f €",
+                    "formulas": "{orders_quote} * {orders_quantity} - {orders_buy} * {orders_quantity} - {orders_buy} * {orders_quantity} * {__cost} - {orders_quote} * {orders_quantity} * {__cost}",
+                    "color_sql": "case when orders_gain < 0 then '#FF0000' else '#006600' end"
+                },
+                "orders_gainp": {
+                    "label_long": "Gain en %",
+                    "label_short": "en %",
+                    "type": "float",
+                    "col_width": 80,
+                    "display": "%3.2f %%",
+                    "formulas": "( ({orders_quote} * {orders_quantity} - {orders_buy} * {orders_quantity} - {orders_buy} * {orders_quantity} * {__cost} - {orders_quote} * {orders_quantity} * {__cost}) / ({orders_buy} * {orders_quantity}) )*100",
+                    "color_sql": "case when orders_gainp < 0 then '#FF0000' else '#006600' end"
+                },
+                "orders_sell_cost": {
+                    "label_long": "Frais",
+                    "label_short": "Frais",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "col_width": 60,
+                    "formulas": "{orders_buy} * {orders_quantity} * {__cost} + {orders_sell} * {orders_quantity} * {__cost}"
+                },
+                "orders_sell_gain": {
+                    "label_long": "Gain",
+                    "label_short": "Gain",
+                    "type": "float",
+                    "col_width": 80,
+                    "display": "%3.2f €",
+                    "formulas": "{orders_sell} * {orders_quantity} - {orders_buy} * {orders_quantity} - {orders_buy} * {orders_quantity} * {__cost} - {orders_sell} * {orders_quantity} * {__cost}",
+                    "color_sql": "case when orders_sell_gain < 0 then '#FF0000' else '#006600' end"
+                },
+                "orders_sell_gainp": {
+                    "label_long": "Gain en %",
+                    "label_short": "en %",
+                    "type": "float",
+                    "col_width": 80,
+                    "display": "%3.2f %%",
+                    "formulas": "( ({orders_sell} * {orders_quantity} - {orders_buy} * {orders_quantity} - {orders_buy} * {orders_quantity} * {__cost} - {orders_sell} * {orders_quantity} * {__cost}) / ({orders_buy} * {orders_quantity}) )*100",
+                    "color_sql": "case when orders_sell_gainp < 0 then '#FF0000' else '#006600' end"
+                },
+                "_analyse": {
+                    "label_long": "Analyse graphique",
+                    "label_short": "Ana.",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "x-office-spreadsheet-template"
+                    },
+                    "args": {
+                        "url": "https://investir.lesechos.fr/charts/gif/{_ptf_isin}.gif",
+                        "title": "Analyse graphique de {orders_ptf_id} - {_ptf_name}"
+                    }
+                },
+                "_optimum": {
+                    "label_long": "Optimum",
+                    "label_short": "Optimum",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "formulas": "{orders_cost_price} + {orders_cost_price} * 0.03"
+                },
+                "_graphdyn": {
+                    "label_long": "Graph",
+                    "label_short": "Dyn",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_graph.PicsouGraphDay",
+                        "icon_name": "utilities-system-monitor"
+                    },
+                    "args": {
+                        "ptf_id": "{orders_ptf_id}",
+                        "path": "png/day/{orders_ptf_id}.png"
+                    }
+                },
+                "_graphday": {
+                    "label_long": "Graph",
+                    "label_short": "Day",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "utilities-system-monitor"
+                    },
+                    "args": {
+                        "path": "png/day/{orders_ptf_id}.png"
+                    }
+                },
+                "_image": {
+                    "label_long": "Histo",
+                    "label_short": "Histo",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "emblem-photos"
+                    },
+                    "args": {
+                        "path": "png/quotes/{orders_ptf_id}.png"
+                    }
+                },
+                "_yahoo": {
+                    "label_long": "Lien vers Yahoo",
+                    "label_short": "Yahoo",
+                    "type": "url",
+                    "params": {
+                        "url": "https://fr.finance.yahoo.com/chart/{orders_ptf_id}",
+                        "icon_name": "applications-internet"
+                    }
+                },
+                "_batch": {
+                    "label_long": "Actualiation des données",
+                    "label_short": "Actualiser...",
+                    "type": "batch_sql",
+                    "params": {
+                        "sqls": [
+                            "update orders set orders_quote = (select close from quotes where id = orders_ptf_id and date = (select max(date) from quotes where id = orders_ptf_id))",
+                            "update orders set orders_gain = orders_quote * orders_quantity - orders_buy * orders_quantity - orders_buy * orders_quantity * {__cost} - orders_quote * orders_quantity * {__cost}",
+                            "update orders set orders_gainp = (orders_gain / (orders_buy * orders_quantity)) * 100"
+                        ],
+                        "icon_name": "view-refresh"
+                    }
+                },
+                "_fsell": {
+                    "label_long": "Vendre",
+                    "label_short": "Vendre",
+                    "type": "form",
+                    "params": {
+                        "form": "fsell",
+                        "icon_name": "media-playback-pause-symbolic",
+                        "action": "create"
+                    },
+                    "args": {
+                        "orders_ptf_id": "{orders_ptf_id}",
+                        "orders_ptf_name": "{orders_ptf_name}",
+                        "orders_quantity": "{orders_quantity}",
+                        "orders_quote": "{orders_quote}",
+                        "orders_buy": "{orders_buy}",
+                        "orders_sell": "{orders_quote}",
+                        "orders_cost_price": "{orders_cost_price}",
+                        "orders_order": "sell"
+                    }
+                }
+            },
+            "views": {
+                "vbuy": {
+                    "title": "Achat",
+                    "form_add": "faddbuy",
+                    "form_edit": "feditbuy",
+                    "searchable": true,
+                    "deletable": true,
+                    "icon_name": "go-up",
+                    "limit": 100,
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {},
+                        "_ptf_name": {},
+                        "_ptf_isin": {"hide":true},
+                        "orders_time": {},
+                        "orders_order": {"hide":true},
+                        "orders_buy": {},
+                        "orders_quantity": {},
+                        "orders_cost": {},
+                        "orders_debit": {},
+                        "orders_cost_price": {},
+                        "_optimum": {},
+                        "orders_quote": {},
+                        "_yahoo": {"hide":true},
+                        "_fsell": {},
+                        "orders_gain": {},
+                        "orders_gainp": {},
+                        "orders_rem": {},
+                        "_graphday": {},
+                        "_image": {},
+                        "_analyse": {},
+                        "_batch": {}
+                    },
+                    "sql_where": "orders.orders_order = 'buy'",
+                    "order_by": "orders.orders_time desc",
+                    "sql_footer": "SELECT printf('+/- Value latente : <b>%.2f</b> €', sum(orders_gain)) AS sql_footer FROM orders WHERE orders_order = 'buy'"
+                },
+                "vsell": {
+                    "title": "Vente",
+                    "form_edit": "feditsell",
+                    "searchable": true,
+                    "deletable": true,
+                    "icon_name": "go-down",
+                    "limit": 100,
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {},
+                        "_ptf_name": {},
+                        "_ptf_isin": {"hide":true},
+                        "orders_time": {},
+                        "orders_sell_time": {},
+                        "orders_order": {"hide":true},
+                        "orders_cost_price": {"hide":true},
+                        "orders_buy": {},
+                        "orders_quote": {},
+                        "orders_sell": {},
+                        "orders_quantity": {},
+                        "orders_sell_cost": {},
+                        "orders_credit": {},
+                        "orders_sell_gain": {},
+                        "orders_sell_gainp": {},
+                        "_graphday": {},
+                        "_image": {},
+                        "_analyse": {}
+                    },
+                    "sql_where": "orders.orders_order = 'sell'",
+                    "order_by": "orders.orders_time desc",
+                    "sql_footer": "SELECT printf('Gain réalisé : <b>%.2f</b> €', sum(orders_sell_gain)) AS sql_footer FROM orders WHERE orders_order = 'sell'"
+                },
+                "vptf_buy": {
+                    "title": "Achats en cours",
+                    "icon_name": "go-jump",
+                    "limit": 20,
+                    "hide": true,
+                    "deletable": false,
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {"hide":true},
+                        "orders_time": {},
+                        "orders_buy": {},
+                        "orders_quantity": {},
+                        "orders_cost": {},
+                        "orders_debit": {},
+                        "orders_cost_price": {},
+                        "orders_quote": {},
+                        "orders_gain": {},
+                        "orders_gainp": {}
+                    },
+                    "sql_where": "orders.orders_order = 'buy'",
+                    "order_by": "orders.orders_time desc"
+                },
+                "vptf_sell": {
+                    "title": "Ventes réalisées",
+                    "icon_name": "go-jump",
+                    "limit": 20,
+                    "hide": true,
+                    "deletable": false,
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {"hide":true},
+                        "orders_time": {},
+                        "orders_cost_price": {"hide":true},
+                        "orders_buy": {},
+                        "orders_quote": {"hide":true},
+                        "orders_sell": {},
+                        "orders_quantity": {},
+                        "orders_sell_cost": {},
+                        "orders_credit": {},
+                        "orders_sell_gain": {},
+                        "orders_sell_gainp": {}
+                    },
+                    "sql_where": "orders.orders_order = 'sell'",
+                    "order_by": "orders.orders_time desc"
+                }
+            },
+            "forms": {
+                "faddbuy": {
+                    "title": "Ajout d'un ordre d'Achat",
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {},
+                        "orders_order": {"protected": true, "default": "buy"},
+                        "orders_time": {}
+                    }
+                },
+                "fbuy": {
+                    "title": "Ajout d'un ordre d'Achat",
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {},
+                        "_ptf_name": {},
+                        "orders_quote": {},
+                        "orders_time": {},
+                        "orders_order": {"hide": true},
+                        "orders_buy": {},
+                        "orders_quantity": {},
+                        "orders_cost_price": {},
+                        "orders_cost": {},
+                        "orders_debit": {},
+                        "orders_gain": {},
+                        "orders_gainp": {}
+                    }
+                },
+                "feditbuy": {
+                    "title": "Mise à jour d'un ordre d'Achat",
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {"read_only": true},
+                        "_ptf_name": {},
+                        "orders_quote": {},
+                        "orders_time": {},
+                        "orders_order": {"hide": true},
+                        "orders_buy": {},
+                        "orders_quantity": {},
+                        "orders_cost_price": {},
+                        "orders_cost": {},
+                        "orders_debit": {},
+                        "orders_gain": {},
+                        "orders_gainp": {}
+                    }
+                },
+                "feditsell": {
+                    "title": "Mise à jour d'un ordre de Vente",
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {"read_only": true},
+                        "_ptf_name": {},
+                        "orders_time": {},
+                        "orders_buy": {},
+                        "orders_cost_price": {},
+                        "orders_sell_time": {},
+                        "orders_order": {"hide": true},
+                        "orders_quote": {},
+                        "orders_sell": {},
+                        "orders_quantity": {},
+                        "orders_sell_cost": {},
+                        "orders_credit": {},
+                        "orders_sell_gain": {},
+                        "orders_sell_gainp": {}
+                    }
+                },
+                "fsell": {
+                    "title": "Ordre de Vente",
+                    "info1": "Appelé via la vue fbuy par le bouton _bsell",
+                    "info2": "orders_order = sell transmis dans args",
+                    "elements": {
+                        "orders_id": {"hide":true},
+                        "orders_ptf_id": {"protected": true},
+                        "_ptf_name": {},
+                        "orders_order": {"protected": true},
+                        "orders_time": {"protected": true},
+                        "orders_buy": {"protected": true},
+                        "orders_cost_price": {},
+                        "orders_quote": {},
+                        "orders_sell_time": {},
+                        "orders_sell": {},
+                        "orders_quantity": {"protected": true},
+                        "orders_sell_cost": {},
+                        "orders_credit": {},
+                        "orders_sell_gain": {},
+                        "orders_sell_gainp": {}
+                    }
+                }
+            }
+        },
+        "ptf": {
+            "key": "ptf_id",
+            "key_display": "ptf_name",
+            "elements": {
+                "ptf_id": {
+                    "label_long": "Valeur",
+                    "label_short": "Valeur",
+                    "type": "text",
+                    "sortable": true,
+                    "searchable": true
+                },
+                "ptf_name": {
+                    "label_long": "Nom",
+                    "label_short": "Nom",
+                    "type": "text",
+                    "searchable": true,
+                    "sortable": true,
+                    "col_width": 140
+                },
+                "ptf_isin": {
+                    "label_long": "Code ISIN",
+                    "label_short": "ISIN",
+                    "type": "text",
+                    "searchable": true
+                },
+                "ptf_note": {
+                    "label_long": "Note",
+                    "label_short": "Note",
+                    "type": "text",
+                    "searchable": true
+                },
+                "ptf_rem": {
+                    "label_long": "Remarque",
+                    "label_short": "Remarque",
+                    "type": "text",
+                    "col_editable": true,
+                    "searchable": true
+                },
+                "ptf_enabled": {
+                    "label_long": "Valeur Active",
+                    "label_short": "Active",
+                    "type": "check",
+                    "col_editable": true
+                },
+                "ptf_top": {
+                    "label_long": "TOP",
+                    "label_short": "TOP",
+                    "type": "check",
+                    "sortable": true,
+                    "col_editable": true
+                },
+                "ptf_gain": {
+                    "label_long": "Gain",
+                    "label_short": "Gain",
+                    "type": "float",
+                    "display": "%3.2f %%",
+                    "sortable": true,
+                    "color_sql": "case when ptf_gain < 0 then '#FF0000' else '#006600' end"
+                },
+                "ptf_quote": {
+                    "label_long": "Quote du jour",
+                    "label_short": "Quote",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "ptf_seuil_vente": {
+                    "label_long": "Seuil vente",
+                    "label_short": "Vente si",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "help_sql": "select '<i>Gain > ' || ({__seuil_vente}*100) || ' %</i>'"
+                },
+                "ptf_trend": {
+                    "label_long": "Tendance",
+                    "label_short": "Tend.",
+                    "type": "text",
+                    "col_editable": true,
+                    "sortable": true,
+                    "searchable": true
+                },
+                "_ptf_seuil_vente": {
+                    "label_long": "Seuil vente",
+                    "label_short": "Vente si",
+                    "type": "text",
+                    "col_align": "right",
+                    "formulas": "case when {ptf_seuil_vente} = 0 then '' else printf('%3.2f €', {ptf_seuil_vente}) end",
+                    "color_sql": "case when ptf_quote >= ptf_seuil_vente then '#FFFFFF' else '#000000' end",
+                    "background_sql": "case when ptf_quote >= ptf_seuil_vente then '#00FF00' else '#FFFFFF' end"
+                },
+                "ptf_seuil_achat": {
+                    "label_long": "Seuil achat",
+                    "label_short": "Achat si",
+                    "type": "float",
+                    "editable": true,
+                    "display": "%3.2f €",
+                    "help_sql": "select '<i>Quote à -' || ({__seuil_achat} * 100) || ' % = ' || ({ptf_quote} - {ptf_quote} * {__seuil_achat}) || ' €</i>'"
+                },
+                "_ptf_seuil_achat": {
+                    "label_long": "Seuil achat",
+                    "label_short": "Achat si",
+                    "type": "text",
+                    "sortable": true,
+                    "col_align": "right",
+                    "formulas": "case when {ptf_seuil_achat} = 0 then '' else printf('%3.2f €', {ptf_seuil_achat}) end",
+                    "color_sql": "case when ptf_quote < ptf_seuil_achat then '#FFFFFF' else '#000000' end",
+                    "background_sql": "case when ptf_quote < ptf_seuil_achat then '#0000FF' else '#FFFFFF' end",
+                    "help_sql": "select '<i>Quote à -' || ({__seuil_achat} * 100) || ' % = ' || ({ptf_quote} - {ptf_quote} * {__seuil_achat}) || ' €</i>'"
+                },
+                "_yahoo": {
+                    "label_long": "Lien vers Yahoo",
+                    "label_short": "Yahoo",
+                    "type": "url",
+                    "params": {
+                        "url": "https://fr.finance.yahoo.com/chart/{ptf_id}",
+                        "icon_name": "applications-internet"
+                    }
+                },
+                "_analyse": {
+                    "label_long": "Analyse graphique",
+                    "label_short": "Ana.",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "x-office-spreadsheet-template"
+                    },
+                    "args": {
+                        "url": "https://investir.lesechos.fr/charts/gif/{ptf_isin}.gif",
+                        "title": "Analyse graphique de {ptf_id} - {ptf_name}"
+                    }
+                },
+                "_graph": {
+                    "label_long": "Graph",
+                    "label_short": "Graph",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "utilities-system-monitor"
+                    },
+                    "args": {
+                        "path": "png/day/{ptf_id}.png"
+                    }
+                },
+                "_histo": {
+                    "label_long": "Histo",
+                    "label_short": "Histo",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "emblem-photos"
+                    },
+                    "args": {
+                        "path": "png/quotes/{ptf_id}.png"
+                    }
+                },
+                "_diapo_quotes": {
+                    "label_long": "Historique",
+                    "label_short": "Historique",
+                    "type": "batch",
+                    "params": {
+                        "plugin": "picsou_diapo.PicsouDiapo",
+                        "icon_name": "applications-office"
+                    },
+                    "args": {
+                        "directory": "png/quotes",
+                        "width": 1200,
+                        "height": 800
+                    }
+                },
+                "_diapo_analyse": {
+                    "label_long": "Analyse",
+                    "label_short": "Analyse",
+                    "type": "batch",
+                    "params": {
+                        "plugin": "picsou_diapo.PicsouDiapo",
+                        "icon_name": "applications-office"
+                    },
+                    "args": {
+                        "directory": "png/ana",
+                        "width": 1200,
+                        "height": 800
+                    }
+                },
+                "_batch": {
+                    "label_long": "Actualiation des données",
+                    "label_short": "Actualiser...",
+                    "type": "batch_sql",
+                    "params": {
+                        "sql": "update ptf set ptf_gain = (select sum(orders_sell_gain) from orders where orders_ptf_id = ptf_id  and orders_order = 'sell') where exists (select sum(orders_sell_gain) from orders where orders_ptf_id = ptf_id)",
+                        "icon_name": "view-refresh"
+                    }
+                },
+                "_vorders_buy": {
+                    "label_long": "Achat en cours",
+                    "label_short": "Achat en cours",
+                    "type": "view",
+                    "height": 100,
+                    "params": {
+                        "table": "orders",
+                        "view": "vptf_buy"
+                    },
+                    "args": {
+                        "orders_ptf_id": "{ptf_id}"
+                    }
+                },
+                "_vorders_sell": {
+                    "label_long": "Ventes réalisées",
+                    "label_short": "Ventes réalisées",
+                    "type": "view",
+                    "height": 100,
+                    "params": {
+                        "table": "orders",
+                        "view": "vptf_sell"
+                    },
+                    "args": {
+                        "orders_ptf_id": "{ptf_id}"
+                    }
+                }
+            },
+            "views": {
+                "vactif": {
+                    "title": "Valeurs Actives",
+                    "form_add": "fadd",
+                    "form_edit": "fedit",
+                    "icon_name": "user-bookmarks",
+                    "searchable": true,
+                    "elements": {
+                        "ptf_id": {},
+                        "ptf_name": {},
+                        "ptf_isin": {"hide": true},
+                        "ptf_quote": {},
+                        "ptf_gain": {},
+                        "ptf_seuil_achat": {"hide": true},
+                        "_ptf_seuil_achat": {"hide": true},
+                        "ptf_seuil_vente": {"hide": true},
+                        "_ptf_seuil_vente": {"hide": true},
+                        "ptf_note": {},
+                        "ptf_top": {},
+                        "ptf_trend": {},
+                        "_yahoo": {},
+                        "ptf_rem": {},
+                        "_graph": {},
+                        "_histo": {},
+                        "_analyse": {},
+                        "_diapo_quotes": {},
+                        "_diapo_analyse": {}
+                    },
+                    "sql_where": "ptf_enabled = '1'",
+                    "order_by": "ptf_top desc, ptf_id"
+                },
+                "vall": {
+                    "title": "Toutes les valeurs",
+                    "form_add": "fadd",
+                    "form_edit": "fedit",
+                    "icon_name": "folder",
+                    "deletable": true,
+                    "searchable": true,
+                    "elements": {
+                        "ptf_id": {},
+                        "ptf_name": {},
+                        "ptf_isin": {"hide": true},
+                        "ptf_enabled": {},
+                        "ptf_quote": {},
+                        "ptf_gain": {},
+                        "_yahoo": {},
+                        "ptf_rem": {},
+                        "_graph": {},
+                        "_histo": {},
+                        "_analyse": {}
+                    },
+                    "order_by": "ptf_id"
+                },
+                "vsimul": {
+                    "info1": "Vue particulière lus par les plugins batch",
+                    "info2": "todo: enlever cette contrainte picsou.py ligne 142",
+                    "title": "Simulateur",
+                    "hide": true,
+                    "elements": {
+                        "ptf_id": {},
+                        "_batch": {}
+                    }
+                }
+            },
+            "forms": {
+                "fadd": {
+                    "title": "Ajout d'un titre",
+                    "elements": {
+                        "ptf_id": {},
+                        "ptf_name": {},
+                        "ptf_isin": {},
+                        "ptf_enabled": {},
+                        "ptf_rem": {}
+                    }
+                },
+                "fedit": {
+                    "title": "Mise à jour d'un titre",
+                    "elements": {
+                        "ptf_id": {},
+                        "ptf_name": {},
+                        "ptf_isin": {},
+                        "ptf_enabled": {},
+                        "_yahoo": {},
+                        "ptf_quote": {"read_only": true},
+                        "ptf_seuil_achat": {},
+                        "ptf_rem": {},
+                        "ptf_gain": {"read_only": true},
+                        "ptf_note": {"read_only": true},
+                        "_vorders_buy": {},
+                        "_vorders_sell": {}
+                    }
+                }
+            }
+        },
+        "cdays": {
+            "key": "cdays_id",
+            "key_display": "cdays_id",
+            "elements": {
+                "cdays_id": {
+                    "label_long": "id",
+                    "label_short": "id",
+                    "type": "int",
+                    "hide": false
+                },
+                "cdays_ptf_id": {
+                    "label_long": "Valeur",
+                    "label_short": "Valeur",
+                    "type": "text",
+                    "sortable": true,
+                    "searchable": true
+                },
+                "cdays_name": {
+                    "label_long": "Nom",
+                    "label_short": "Nom",
+                    "type": "text",
+                    "searchable": true,
+                    "expandable": false,
+                    "col_width": 150
+                },
+                "cdays_date": {
+                    "label_long": "Date",
+                    "label_short": "Date",
+                    "type": "calendar",
+                    "sortable": true,
+                    "searchable": true
+                },
+                "cdays_open": {
+                    "label_long": "Open",
+                    "label_short": "Open",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "cdays_close": {
+                    "label_long": "Cours",
+                    "label_short": "Cours",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "cdays_dvol": {
+                    "label_long": "Volume",
+                    "label_short": "Volume",
+                    "type": "int",
+                    "display": "% u"
+                },
+                "cdays_vevo": {
+                    "label_long": "Vol %",
+                    "label_short": "Vol %",
+                    "type": "int",
+                    "display": "%3f"
+                },
+                "cdays_low": {
+                    "label_long": "Min",
+                    "label_short": "Min",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "cdays_high": {
+                    "label_long": "Max",
+                    "label_short": "Max",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "cdays_time": {
+                    "label_long": "Heure",
+                    "label_short": "Heure",
+                    "type": "text",
+                    "default": "2020-03-22 10:30:00",
+                    "sortable": true,
+                    "searchable": true
+                },
+                "cdays_percent": {
+                    "label_long": "%",
+                    "label_short": "%",
+                    "type": "float",
+                    "display": "%3.2f %%",
+                    "color_sql": "case when cdays_percent < 0 then '#FF0000' else '#006600' end"
+                },
+                "cdays_rsi": {
+                    "label_long": "RSI",
+                    "label_short": "RSI",
+                    "type": "float",
+                    "display": "%3.2f"
+                },
+                "cdays_ema": {
+                    "label_long": "EMA",
+                    "label_short": "EMA",
+                    "type": "float",
+                    "display": "%3.2f"
+                },
+                "cdays_sma": {
+                    "label_long": "SMA",
+                    "label_short": "SMA",
+                    "type": "float",
+                    "display": "%3.2f"
+                },
+                "cdays_trade": {
+                    "label_long": "Trade",
+                    "label_short": "Trade",
+                    "type": "text"
+                },
+                "cdays_quantity": {
+                    "label_long": "Quantité",
+                    "label_short": "QT",
+                    "type": "integer"
+                },
+                "cdays_cost": {
+                    "label_long": "Coût",
+                    "label_short": "Coût",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "cdays_gain": {
+                    "label_long": "Gain",
+                    "label_short": "Gain",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "color_sql": "case when cdays_gain < 0 then '#FF0000' else '#006600' end"
+                },
+                "cdays_gainp": {
+                    "label_long": "en %",
+                    "label_short": "en %",
+                    "type": "float",
+                    "display": "%3.2f %%",
+                    "color_sql": "case when cdays_gainp < 0 then '#FF0000' else '#006600' end"
+                },
+                "_batch": {
+                    "label_long": "Actualiation des données",
+                    "label_short": "Actualiser...",
+                    "type": "batch",
+                    "params": {
+                        "plugin": "picsou_batchui.PicsouBatchUi",
+                        "icon_name": "view-refresh"
+                    }
+                },
+                "_yahoo": {
+                    "label_long": "Lien vers Yahoo",
+                    "label_short": "Yahoo",
+                    "type": "url",
+                    "params": {
+                        "url": "https://fr.finance.yahoo.com/chart/{cdays_ptf_id}",
+                        "icon_name": "applications-internet"
+                    }
+                },
+                "_image": {
+                    "label_long": "Graph",
+                    "label_short": "Graph",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "utilities-system-monitor"
+                    },
+                    "args": {
+                        "path": "png/day/{cdays_ptf_id}.png"
+                    }
+                },
+                "_graph": {
+                    "label_long": "Graph",
+                    "label_short": "Graph",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_graph.PicsouGraphDay",
+                        "icon_name": "utilities-system-monitor"
+                    },
+                    "args": {
+                        "ptf_id": "{cdays_ptf_id}",
+                        "path": "png/day/{cdays_ptf_id}.png"
+                    }
+                }
+            },
+            "views": {
+                "vall": {
+                    "title": "Cours du jour",
+                    "searchable_sql": true,
+                    "deletable": true,
+                    "icon_name": "application-rss+xml",
+                    "limit": 400,
+                    "elements": {
+                        "cdays_id": {},
+                        "cdays_ptf_id": {},
+                        "cdays_name": {},
+                        "cdays_time": {},
+                        "cdays_open": {},
+                        "cdays_close": {},
+                        "cdays_dvol": {},
+                        "cdays_percent": {},
+                        "cdays_rsi": {},
+                        "cdays_ema": {},
+                        "cdays_sma": {},
+                        "cdays_trade": {},
+                        "_image": {},
+                        "cdays_gain": {},
+                        "cdays_gainp": {},
+                        "_yahoo": {}
+                    },
+                    "order_by": "cdays.cdays_ptf_id, cdays.cdays_time asc"
+                }
+            },
+            "forms": {
+            }
+        },
+        "trades": {
+            "key": "trades_id",
+            "key_display": "trades_id",
+            "elements": {
+                "trades_id": {
+                    "label_long": "id",
+                    "label_short": "id",
+                    "type": "int",
+                    "hide": false
+                },
+                "trades_ptf_id": {
+                    "label_long": "Valeur",
+                    "label_short": "Valeur",
+                    "type": "text",
+                    "searchable": true,
+                    "sortable": true
+                },
+                "ptf_name": {
+                    "label_long": "Nom",
+                    "label_short": "Nom",
+                    "type": "text",
+                    "searchable": true,
+                    "sortable": true,
+                    "sql_text": "SELECT ptf_name From ptf where ptf_id = '{trades_ptf_id}'",
+                    "jointure": {
+                        "join": "LEFT OUTER JOIN ptf on ptf.ptf_id = trades.trades_ptf_id",
+                        "column": "ptf_name"
+                    }
+                },
+                "trades_time": {
+                    "label_long": "Heure",
+                    "label_short": "Heure",
+                    "type": "text",
+                    "sortable": true,
+                    "searchable": true
+                },
+                "trades_order": {
+                    "label_long": "Ordre",
+                    "label_short": "Ordre",
+                    "type": "text",
+                    "sortable": true,
+                    "searchable": true
+                },
+                "trades_buy": {
+                    "label_long": "Achat",
+                    "label_short": "Achat",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "trades_sell": {
+                    "label_long": "Vente",
+                    "label_short": "Vente",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "trades_quantity": {
+                    "label_long": "Quantité",
+                    "label_short": "Qt",
+                    "type": "int"
+                },
+                "trades_cost": {
+                    "label_long": "Frais",
+                    "label_short": "Frais",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "trades_gain": {
+                    "label_long": "Gain",
+                    "label_short": "Gain",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "sortable": true,
+                    "color_sql": "case when trades_gain < 0 then '#FF0000' else '#006600' end"
+                },
+                "trades_gainp": {
+                    "label_long": "%",
+                    "label_short": "%",
+                    "type": "float",
+                    "display": "%3.2f %%",
+                    "color_sql": "case when trades_gainp < 0 then '#FF0000' else '#006600' end"
+                },
+                "trades_cash": {
+                    "label_long": "Cash",
+                    "label_short": "Cash",
+                    "type": "float",
+                    "display": "%3.2f €"
+                },
+                "trades_day": {
+                    "label_long": "Gain du jour",
+                    "label_short": "Gain Jour",
+                    "type": "float",
+                    "display": "%3.2f €",
+                    "color_sql": "case when trades_day < 0 then '#FF0000' else '#006600' end"
+                },
+                "_yahoo": {
+                    "label_long": "Lien vers Yahoo",
+                    "label_short": "Yahoo",
+                    "type": "url",
+                    "params": {
+                        "url": "https://fr.finance.yahoo.com/chart/{trades_ptf_id}",
+                        "icon_name": "applications-internet"
+                    }
+                },
+                "_batch": {
+                    "label_long": "Actualiation des données",
+                    "label_short": "Actualiser...",
+                    "type": "batch",
+                    "params": {
+                        "plugin": "picsou_batchui.PicsouBatchUi",
+                        "icon_name": "view-refresh"
+                    }
+                },
+                "_image": {
+                    "label_long": "Cours",
+                    "label_short": "Cours",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_image.PicsouImage",
+                        "icon_name": "utilities-system-monitor"
+                    },
+                    "args": {
+                        "path": "png/day/{trades_ptf_id}.png"
+                    }
+                },
+                "_graph": {
+                    "label_long": "Graph",
+                    "label_short": "Graph",
+                    "type": "plugin",
+                    "params": {
+                        "plugin": "picsou_graph.PicsouGraphDay",
+                        "icon_name": "utilities-system-monitor"
+                    },
+                    "args": {
+                        "ptf_id": "{trades_ptf_id}",
+                        "path": "png/day/{trades_ptf_id}.png"
+                    }
+                },
+                "_form_order_buy": {
+                    "label_long": "Acheter",
+                    "label_short": "Acheter",
+                    "type": "form",
+                    "params": {
+                        "table": "orders",
+                        "form": "fbuy",
+                        "icon_name": "media-playback-stop",
+                        "action": "create"
+                    },
+                    "args": {
+                        "orders_ptf_id": "{trades_ptf_id}",
+                        "orders_order": "buy",
+                        "orders_buy": "{trades_buy}",
+                        "orders_quantity": "{trades_quantity}"
+                    }
+                }
+            },
+            "views": {
+                "vday": {
+                    "title": "Trades du jour",
+                    "searchable": true,
+                    "deletable": true,
+                    "icon_name": "go-jump",
+                    "limit": 100,
+                    "hide": true,
+                    "elements": {
+                        "trades_id": {},
+                        "trades_ptf_id": {},
+                        "ptf_name": {},
+                        "trades_time": {},
+                        "trades_order": {},
+                        "trades_buy": {},
+                        "trades_sell": {},
+                        "trades_quantity": {},
+                        "trades_cost": {},
+                        "trades_gain": {},
+                        "trades_gainp": {},
+                        "_yahoo": {},
+                        "trades_cash": {},
+                        "trades_day": {},
+                        "_image": {},
+                        "_form_order_buy": {},
+                        "_batch": {}
+                    },
+                    "order_by": "trades.trades_time, trades.trades_ptf_id",
+                    "sql_footer": "SELECT printf('Le PICSOU du Jour : <b>%.2f</b> €', sum(trades_gain)) AS sql_footer FROM trades"
+                },
+                "vall": {
+                    "title": "Trades Histo",
+                    "searchable": true,
+                    "deletable": true,
+                    "icon_name": "go-jump",
+                    "limit": 100,
+                    "hide": true,
+                    "elements": {
+                        "trades_id": {},
+                        "trades_ptf_id": {},
+                        "ptf_name": {},
+                        "trades_time": {},
+                        "trades_order": {},
+                        "trades_buy": {},
+                        "trades_sell": {},
+                        "trades_quantity": {},
+                        "trades_cost": {},
+                        "trades_gain": {},
+                        "trades_gainp": {},
+                        "_yahoo": {},
+                        "trades_cash": {},
+                        "trades_day": {},
+                        "_image": {}
+                    },
+                    "order_by": "trades.trades_time, trades.trades_ptf_id",
+                    "sql_footer": "SELECT printf('PICSOU total : <b>%.2f</b> €', sum(trades_gain)) AS sql_footer FROM trades"
+                },
+                "vptf": {
+                    "title": "Historique",
+                    "hide": true,
+                    "searchable": true,
+                    "deletable": true,
+                    "icon_name": "go-jump",
+                    "limit": 100,
+                    "elements": {
+                        "trades_id": {"hide":true},
+                        "trades_ptf_id": {"hide":true},
+                        "ptf_name": {"hide":true},
+                        "trades_time": {},
+                        "trades_order": {},
+                        "trades_buy": {},
+                        "trades_sell": {},
+                        "trades_quantity": {},
+                        "trades_cost": {},
+                        "trades_gain": {},
+                        "trades_gainp": {},
+                        "_image": {}
+                    },
+                    "order_by": "trades.trades_time, trades.trades_ptf_id"
+                }
+            },
+            "forms": {}
+        }
+    }
+}

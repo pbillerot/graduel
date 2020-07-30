@@ -1,0 +1,5 @@
+{
+	"ServerPort": ":8053",
+	"SqlitePath": "/mnt/nas/data/picsou/picsou.sqlite",
+	"CsrfSecure": false
+}
