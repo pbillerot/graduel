@@ -96,7 +96,7 @@ func PopulateTemplates() {
 		log.Println(err)
 		os.Exit(1)
 	}
-	homeTemplate = templates.Lookup("home.html")
+	homeTemplate = templates.Lookup("homepage.html")
 	aboutTemplate = templates.Lookup("about.html")
 	loginTemplate = templates.Lookup("login.html")
 
