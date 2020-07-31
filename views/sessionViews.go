@@ -6,10 +6,8 @@ import (
 	"os"
 
 	"github.com/gorilla/context"
-	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"
 	"github.com/pbillerot/graduel/db"
-	"github.com/pbillerot/graduel/dico"
 )
 
 // CodeSecure as
@@ -22,7 +20,7 @@ var Store = sessions.NewCookieStore(CodeSecure)
 func RequiresLogin(handler func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, _ := Store.Get(r, "session")
-		if session.Values["loggedin"] != "true" {
+		if session.Values["loggedin"] != true {
 			http.Redirect(w, r, "/login", 302)
 			return
 		}
@@ -34,23 +32,21 @@ func RequiresLogin(handler func(w http.ResponseWriter, r *http.Request)) func(w 
 func LogoutFunc(w http.ResponseWriter, r *http.Request) {
 	session, err := Store.Get(r, "session")
 	if err == nil { //If there is no error, then remove session
-		if session.Values["loggedin"] != "false" {
-			session.Values["loggedin"] = "false"
+		if session.Values["loggedin"] != false {
+			session.Values["loggedin"] = false
 			session.Save(r, w)
 		}
 	}
+	GraduelAddContext(r)
 	http.Redirect(w, r, "/login", 302) //redirect to login irrespective of error or not
 }
 
 //LoginFunc implements the login functionality, will add a cookie to the cookie store for managing authentication
 func LoginFunc(w http.ResponseWriter, r *http.Request) {
-	session, _ := Store.Get(r, "session")
-	context.Set(r, "CSRFToken", csrf.TemplateField(r))
-	context.Set(r, "Application", dico.GetDico())
-
 	switch r.Method {
 	case "GET":
 		log.Println("LoginFunc context", context.GetAll(r))
+		GraduelAddContext(r)
 		loginTemplate.Execute(w, context.GetAll(r))
 	case "POST":
 		log.Print("Inside POST")
@@ -59,11 +55,12 @@ func LoginFunc(w http.ResponseWriter, r *http.Request) {
 		password := r.Form.Get("password")
 
 		if (username != "" && password != "") && db.ValidUser(username, password) {
-			session.Values["loggedin"] = "true"
+			session, _ := Store.Get(r, "session")
+			session.Values["loggedin"] = true
 			session.Values["username"] = username
 			session.Save(r, w)
 			log.Print("user ", username, " is authenticated")
-			context.Set(r, "username", username)
+			GraduelAddContext(r)
 			http.Redirect(w, r, "/", 302)
 			return
 		}
@@ -92,6 +89,7 @@ func SignUpFunc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Unable to sign user up", http.StatusInternalServerError)
 	} else {
-		http.Redirect(w, r, "/login/", 302)
+		GraduelAddContext(r)
+		http.Redirect(w, r, "/login", 302)
 	}
 }

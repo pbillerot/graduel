@@ -13,6 +13,7 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/csrf"
+	"github.com/pbillerot/graduel/config"
 	"github.com/pbillerot/graduel/dico"
 	"github.com/pbillerot/graduel/types"
 )
@@ -27,10 +28,9 @@ var err error
 var application dico.Application
 
 //ShowPortailFunc is used to handle the "/" URL which is the default ons
-//TODO add http404 error
 func ShowPortailFunc(w http.ResponseWriter, r *http.Request) {
 	session, _ := Store.Get(r, "session")
-	if session.Values["loggedin"] != "true" {
+	if session.Values["loggedin"] != true {
 		http.Redirect(w, r, "/login", 302)
 		return
 	}
@@ -39,9 +39,8 @@ func ShowPortailFunc(w http.ResponseWriter, r *http.Request) {
 		if message != "" {
 			context.Set(r, "Message", message)
 		}
-		context.Set(r, "CSRFToken", csrf.TemplateField(r))
+		GraduelAddContext(r)
 		context.Set(r, "Application", dico.GetDico())
-		context.Set(r, "username", session.Values["username"])
 		homeTemplate.Execute(w, context.GetAll(r))
 	}
 }
@@ -49,7 +48,7 @@ func ShowPortailFunc(w http.ResponseWriter, r *http.Request) {
 // AboutFunc as
 func AboutFunc(w http.ResponseWriter, r *http.Request) {
 	session, _ := Store.Get(r, "session")
-	if session.Values["loggedin"] != "true" {
+	if session.Values["loggedin"] != true {
 		http.Redirect(w, r, "/login", 302)
 		return
 	}
@@ -66,9 +65,9 @@ func AboutFunc(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 	}
 
+	GraduelAddContext(r)
 	context.Set(r, "About", About)
 	context.Set(r, "Application", dico.GetDico())
-	context.Set(r, "username", session.Values["username"])
 	aboutTemplate.Execute(w, context.GetAll(r))
 }
 
@@ -101,4 +100,21 @@ func PopulateTemplates() {
 	aboutTemplate = templates.Lookup("about.html")
 	loginTemplate = templates.Lookup("login.html")
 
+}
+
+// GraduelAddContext ajout dans le context des données de sessions, config, application
+func GraduelAddContext(r *http.Request) {
+	// Ajout des données de session
+	session, _ := Store.Get(r, "session")
+	if session.Values["loggedin"] == true {
+		context.Set(r, "loggedin", true)
+		context.Set(r, "username", session.Values["username"])
+	}
+	// Ajout de config
+	conf, _ := config.ReadConfig()
+	context.Set(r, "config", conf)
+	// Ajout du token de sécurité
+	context.Set(r, "CSRFToken", csrf.TemplateField(r))
+	// Ajout du dictionnaire de l'application
+	context.Set(r, "Application", dico.GetDico())
 }

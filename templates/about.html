@@ -8,14 +8,20 @@
       <div class="ui main text container">
          <div class="ui card">
             <div class="image">
-               <img src="/static/img/picsou.jpg">
+               <img src="/static/img/graduel-320.png">
             </div>
             <div class="content">
                <a class="header">{{.About.Application}}</a>
                <div class="meta">
-                  <span>Version {{.About.Version}}</span>
-                  <span class="date">{{.About.Date}}</span>
-                  <span class="user icon">{{.About.Author}}</span>
+                  <div class="ui label">
+                     <i class="user icon"></i> {{.About.Author}}
+                   </div>
+                   <div class="ui label">
+                     <i class="code icon"></i> Version {{.About.Version}}
+                   </div>
+                   <div class="ui label">
+                     <i class="calendar icon"></i> {{.About.Date}}
+                   </div>
                </div>
                <div class="description">
                   {{.About.Note}}

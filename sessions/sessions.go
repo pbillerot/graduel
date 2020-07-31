@@ -15,7 +15,7 @@ var session *sessions.Session
 func IsLoggedIn(r *http.Request) bool {
 	session, err := Store.Get(r, "session")
 
-	if err == nil && (session.Values["loggedin"] == "true") {
+	if err == nil && (session.Values["loggedin"] == true) {
 		return true
 	}
 	return false
