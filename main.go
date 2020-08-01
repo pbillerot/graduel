@@ -71,7 +71,7 @@ func main() {
 
 	log.Println(fmt.Printf("running server on http://localhost%s/login", conf.ServerPort))
 	http.ListenAndServe(conf.ServerPort,
-		logRequest(
+		wrapHandlerWithLogging(
 			csrf.Protect(
 				[]byte(os.Getenv("SECRET_KEY")),
 				csrf.Secure(conf.CsrfSecure),
@@ -80,7 +80,35 @@ func main() {
 
 func logRequest(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		log.Printf("%s %s %d %s\n", r.RemoteAddr, r.Method, http.StatusOK, r.URL)
 		handler.ServeHTTP(w, r)
 	})
+}
+
+// https://ndersson.me/post/capturing_status_code_in_net_http/
+func wrapHandlerWithLogging(wrappedHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		lrw := newLoggingResponseWriter(w)
+		wrappedHandler.ServeHTTP(lrw, r)
+
+		statusCode := lrw.statusCode
+		log.Printf("%s %s %d %s", r.RemoteAddr, r.Method, statusCode, r.URL.Path)
+
+		// log.Printf("<-- %d %s", statusCode, http.StatusText(statusCode))
+	})
+}
+
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func newLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
+	return &loggingResponseWriter{w, http.StatusOK}
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
 }

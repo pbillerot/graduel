@@ -4,39 +4,37 @@
 {{template "_head.html" .}}
 
 <body>
-   {{template "_navbar.html" .}}
-   <main>
-      <div class="ui main text container">
-         <div class="ui card">
+    {{template "_navbar.html" .}}
+    <main>
+        <div class="ui centered card">
             <div class="image">
-               <img src="/static/img/graduel-320.png">
+                <img src="/static/img/graduel-320.png">
             </div>
             <div class="content">
-               <a class="header">{{.About.Application}}</a>
-               <div class="meta">
-                  <div class="ui label">
-                     <i class="user icon"></i> {{.About.Author}}
-                   </div>
-                   <div class="ui label">
-                     <i class="code icon"></i> Version {{.About.Version}}
-                   </div>
-                   <div class="ui label">
-                     <i class="calendar icon"></i> {{.About.Date}}
-                   </div>
-               </div>
-               <div class="description">
-                  {{.About.Note}}
-               </div>
+                <a class="header">{{.About.Application}}</a>
+                <div class="meta">
+                    <div class="ui label">
+                        <i class="user icon"></i> {{.About.Author}}
+                    </div>
+                    <div class="ui label">
+                        <i class="code icon"></i> Version {{.About.Version}}
+                    </div>
+                    <div class="ui label">
+                        <i class="calendar icon"></i> {{.About.Date}}
+                    </div>
+                </div>
+                <div class="description">
+                    {{.About.Note}}
+                </div>
             </div>
             <div class="extra content">
-               <a href="https://github.com/pbillerot/graduel">
-                  <i class="github icon"></i>Github
-               </a>
+                <a href="https://github.com/pbillerot/graduel" target="_blank">
+                    <i class="github icon"></i>Github
+                </a>
             </div>
-         </div>
-      </div>
-   </main>
-   {{template "_footer.html" .}}
+        </div>
+    </main>
+    {{template "_footer.html" .}}
 </body>
 
 </html>
