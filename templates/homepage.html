@@ -2221,9 +2221,7 @@
     $('style.override').remove();
     }
     console.log(content);
-    $('<style>
-        ' + content + '
-    </style>')
+    $('<style>' + content + '</style>')
     .addClass('override')
     .appendTo('body')
     ;
