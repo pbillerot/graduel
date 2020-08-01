@@ -2,5 +2,6 @@
 	"ServerPort": ":8053",
 	"SqlitePath": "/mnt/nas/data/picsou/picsou.sqlite",
 	"CsrfSecure": false,
-	"Template": "maquette"
+	"Template": "maquette",
+	"Theme": "brown"
 }

@@ -49,6 +49,7 @@ func main() {
 	r.HandleFunc("/signup", views.SignUpFunc)
 	r.HandleFunc("/", views.RequiresLogin(views.ShowPortailFunc))
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("public")))
+	r.HandleFunc("/favicon.ico", views.FaviconHandler)
 
 	// http.HandleFunc("/api/get-task/", views.GetTasksFuncAPI)
 	// http.HandleFunc("/api/get-deleted-task/", views.GetDeletedTaskFuncAPI)
@@ -70,8 +71,16 @@ func main() {
 
 	log.Println(fmt.Printf("running server on http://localhost%s/login", conf.ServerPort))
 	http.ListenAndServe(conf.ServerPort,
-		csrf.Protect(
-			[]byte(os.Getenv("SECRET_KEY")),
-			csrf.Secure(conf.CsrfSecure),
-		)(r))
+		logRequest(
+			csrf.Protect(
+				[]byte(os.Getenv("SECRET_KEY")),
+				csrf.Secure(conf.CsrfSecure),
+			)(r)))
+}
+
+func logRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
 }

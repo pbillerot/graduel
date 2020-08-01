@@ -10,6 +10,7 @@ type Configuration struct {
 	SqlitePath string
 	CsrfSecure bool
 	Template   string
+	Theme      string // couleur de base
 }
 
 //About as

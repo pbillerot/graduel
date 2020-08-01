@@ -25,7 +25,9 @@ func IsLoggedIn(r *http.Request) bool {
 func GetCurrentUserName(r *http.Request) string {
 	session, err := Store.Get(r, "session")
 	if err == nil {
-		return session.Values["username"].(string)
+		if val, ok := session.Values["username"].(string); ok {
+			return val
+		}
 	}
 	return ""
 }

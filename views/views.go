@@ -125,4 +125,12 @@ func GraduelAddContext(r *http.Request) {
 	context.Set(r, "CSRFToken", csrf.TemplateField(r))
 	// Ajout du dictionnaire de l'application
 	context.Set(r, "Application", dico.GetDico())
+	// for key, element := range context.GetAll(r) {
+	// 	log.Println("Key:", key, "=>", "Element:", element)
+	// }
+}
+
+// FaviconHandler icone du site
+func FaviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "/static/img/favicon.ico")
 }
