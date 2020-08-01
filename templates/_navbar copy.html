@@ -46,12 +46,12 @@
           </div>
         </div>
         <div class="ui simple dropdown item">
-          {{if .loggedin}}
-          <i class="user icon"></i> {{.username}}
+          {{if .Session.LoggedIn}}
+          <i class="user icon"></i> {{.Session.Username}}
           {{else}} Non connecté {{end}}
           <i class="dropdown icon"></i>
           <div class="menu">
-            {{if .loggedin}}
+            {{if .Session.LoggedIn}}
             <a class="item" href="/logout">Se déconnecter</a>
             {{else}}
             <a class="item" href="/login">Se connecter...</a>

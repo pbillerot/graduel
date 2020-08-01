@@ -1,0 +1,54 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html>
+{{template "_head.html" .}}
+<style type="text/css">
+  body {
+    background-color: #DADADA;
+  }
+  body > .grid {
+    height: 100%;
+  }
+  .image {
+    margin-top: -100px;
+  }
+  .column {
+    max-width: 450px;
+  }
+</style>
+<body>
+  <div class="ui middle aligned center aligned grid">
+    <div class="column">
+      <h2 class="ui orange image header">
+        <img src="/static/img/graduel-320.png" class="image">
+        <div class="content">
+          Identification
+        </div>
+      </h2>
+      <form class="ui large form" action="/login" method="POST">
+        <div class="ui stacked segment">
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="text" name="username" placeholder="Username">
+            </div>
+          </div>
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="password" placeholder="Password">
+            </div>
+          </div>
+          <button class="ui fluid large orange submit button" type="submit">Se connecter</button>
+        </div>
+        {{ .CSRFToken }}  
+        <div class="ui error message"></div>
+  
+      </form>
+  
+    </div>
+  </div>
+  {{._foot.html}}
+</body>
+
+</html>

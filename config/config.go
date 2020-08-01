@@ -13,6 +13,7 @@ import (
 
 var err error
 var config types.Configuration
+var about types.About
 
 //ReadConfig will read the configuration json file to read the parameters
 //which will be passed in the config file
@@ -31,4 +32,22 @@ func ReadConfig() (types.Configuration, error) {
 		}
 	}
 	return config, nil
+}
+
+// ReadAbout c'est ça
+func ReadAbout() (types.About, error) {
+	if about.Application == "" {
+		aboutFile, err := ioutil.ReadFile("about.json")
+		if err != nil {
+			log.Print("Unable to read config file, switching to flag mode")
+			return types.About{}, err
+		}
+		//log.Print(configFile)
+		err = json.Unmarshal(aboutFile, &about)
+		if err != nil {
+			log.Print("Invalid JSON, expecting port from command line flag")
+			return types.About{}, err
+		}
+	}
+	return about, nil
 }

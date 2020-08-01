@@ -1,8 +1,8 @@
 {
 	"Application": "Graduel",
-	"Note": "Atelier de développement",
+	"Note": "Atelier de développement Web Json sur un serveur Debian Golang Semantic-ui",
 	"Author": "Philippe Billerot",
 	"Version": "0.1",
 	"Date": "28-07-2020",
-	"Git": "github.com/pbillerot"
+	"Git": "github.com/pbillerot/graduel"
 }

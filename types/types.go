@@ -9,6 +9,7 @@ type Configuration struct {
 	ServerPort string
 	SqlitePath string
 	CsrfSecure bool
+	Template   string
 }
 
 //About as
@@ -19,6 +20,12 @@ type About struct {
 	Version     string
 	Date        string
 	Git         string
+}
+
+// Session as
+type Session struct {
+	Username string
+	LoggedIn bool
 }
 
 /*

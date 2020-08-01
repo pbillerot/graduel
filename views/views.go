@@ -15,13 +15,15 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/pbillerot/graduel/config"
 	"github.com/pbillerot/graduel/dico"
+	"github.com/pbillerot/graduel/sessions"
 	"github.com/pbillerot/graduel/types"
 )
 
+var templates *template.Template
 var homeTemplate *template.Template
 var aboutTemplate *template.Template
-var templates *template.Template
 var loginTemplate *template.Template
+var tableTemplate *template.Template
 
 var message string //message will store the message to be shown as notification
 var err error
@@ -72,9 +74,12 @@ func AboutFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 //PopulateTemplates is used to parse all templates present in the templates folder
-func PopulateTemplates() {
+func PopulateTemplates(templateDirectory string) {
 	var allFiles []string
-	templatesDir := "./templates/"
+	templatesDir := "./templates/" + templateDirectory
+	if !strings.HasSuffix(templatesDir, "/") {
+		templatesDir += "/"
+	}
 	files, err := ioutil.ReadDir(templatesDir)
 	if err != nil {
 		log.Println(err)
@@ -96,23 +101,26 @@ func PopulateTemplates() {
 		log.Println(err)
 		os.Exit(1)
 	}
-	homeTemplate = templates.Lookup("homepage.html")
+	homeTemplate = templates.Lookup("home.html")
 	aboutTemplate = templates.Lookup("about.html")
 	loginTemplate = templates.Lookup("login.html")
+	tableTemplate = templates.Lookup("table.html")
 
 }
 
 // GraduelAddContext ajout dans le context des données de sessions, config, application
 func GraduelAddContext(r *http.Request) {
 	// Ajout des données de session
-	session, _ := Store.Get(r, "session")
-	if session.Values["loggedin"] == true {
-		context.Set(r, "loggedin", true)
-		context.Set(r, "username", session.Values["username"])
-	}
+	ses := types.Session{}
+	ses.LoggedIn = sessions.IsLoggedIn(r)
+	ses.Username = sessions.GetCurrentUserName(r)
+	context.Set(r, "Session", ses)
 	// Ajout de config
 	conf, _ := config.ReadConfig()
-	context.Set(r, "config", conf)
+	context.Set(r, "Config", conf)
+	// Ajout de about
+	about, _ := config.ReadAbout()
+	context.Set(r, "About", about)
 	// Ajout du token de sécurité
 	context.Set(r, "CSRFToken", csrf.TemplateField(r))
 	// Ajout du dictionnaire de l'application

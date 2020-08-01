@@ -41,7 +41,7 @@ func main() {
 		conf.ServerPort = *port
 	}
 
-	views.PopulateTemplates()
+	views.PopulateTemplates(conf.Template)
 	r := mux.NewRouter()
 	r.HandleFunc("/about", views.RequiresLogin(views.AboutFunc))
 	r.HandleFunc("/login", views.LoginFunc)

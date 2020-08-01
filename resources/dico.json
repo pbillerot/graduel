@@ -1,5 +1,6 @@
 {
-    "title": "PICSOU en action",
+    "title": "PICSOU",
+    "info": "Le framework Web en JSON",
     "constants": {
         "qlast_quotes": "30"
     },
